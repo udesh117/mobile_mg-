@@ -1,0 +1,39 @@
+appId: ${APP_ID}
+---
+# Test: Edit Task Flow
+# Prerequisites: User must be logged in, have a project, and at least one task
+- launchApp
+- assertVisible: "My Projects"
+# Wait for projects to load
+- waitForAnimationToEnd
+# Navigate to first project
+- tapOn:
+    text: ".*"
+    index: 0
+    optional: true
+# Alternative: tap on project area
+- tapOn:
+    point: "50%,40%"
+    optional: true
+# Wait for project to load
+- waitForAnimationToEnd
+# Tap on first task card (in To Do column, left side)
+- tapOn:
+    point: "15%,50%"
+    optional: true
+# Alternative: tap on any visible task
+- tapOn:
+    text: ".*"
+    index: 0
+    optional: true
+- assertVisible: "Edit Task"
+- assertVisible: "Task Title *"
+# Update task title
+- tapOn: "Task Title *"
+- clearText
+- inputText: "Updated Task ${RANDOM}"
+- tapOn: "Save"
+# Wait for update to complete
+- waitForAnimationToEnd
+- assertVisible: "Updated Task"
+

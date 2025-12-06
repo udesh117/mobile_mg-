@@ -1,0 +1,13 @@
+appId: ${APP_ID}
+---
+# Test: User Login Flow
+- launchApp
+- assertVisible: "Welcome Back"
+- assertVisible: "Sign in to continue"
+- tapOn: "Email"
+- inputText: ${TEST_EMAIL}
+- tapOn: "Password"
+- inputText: ${TEST_PASSWORD}
+- tapOn: "Sign In"
+- assertVisible: "My Projects"
+

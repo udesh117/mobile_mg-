@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "376085608330",
+    "project_id": "ahion-e7b57",
+    "storage_bucket": "ahion-e7b57.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:376085608330:android:2c97fc1f8cdef395d67a73",
+        "android_client_info": {
+          "package_name": "com.projectmanager.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBeS4bJZjLqPfY7WiX2CI8VqSMN7HdcDnA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

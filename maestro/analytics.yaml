@@ -1,0 +1,13 @@
+appId: ${APP_ID}
+---
+# Test: View Analytics
+# Prerequisites: User must be logged in and have at least one project
+- launchApp
+- assertVisible: "My Projects"
+# Navigate to Analytics tab
+- tapOn: "Analytics"
+- assertVisible: "Project Analytics"
+- assertVisible: "Tasks by Status"
+- assertVisible: "Tasks by Assignee"
+- assertVisible: "Total Tasks"
+

@@ -1,0 +1,15 @@
+appId: ${APP_ID}
+---
+# Test: User Sign Up Flow
+- launchApp
+- assertVisible: "Create Account"
+- assertVisible: "Sign up to get started"
+- tapOn: "Email"
+- inputText: "testuser${RANDOM}@example.com"
+- tapOn: "Password"
+- inputText: "testpass123"
+- tapOn: "Confirm Password"
+- inputText: "testpass123"
+- tapOn: "Sign Up"
+- assertVisible: "My Projects"
+

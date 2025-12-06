@@ -1,0 +1,29 @@
+appId: ${APP_ID}
+---
+# Test: Create Task Flow
+# Prerequisites: User must be logged in and have at least one project
+- launchApp
+- assertVisible: "My Projects"
+# Wait a moment for projects to load
+- waitForAnimationToEnd
+# Tap on the first project (tap on any visible project name)
+- tapOn:
+    text: ".*"
+    index: 0
+    optional: true
+# Alternative: If project card has specific text, tap on it
+- tapOn: 
+    point: "50%,40%"
+    optional: true
+- assertVisible: "New Task"
+- tapOn: "New Task"
+- assertVisible: "Create New Task"
+- tapOn: "Task Title *"
+- inputText: "Test Task ${RANDOM}"
+- tapOn: "Description"
+- inputText: "This is a test task description"
+- tapOn: "Create"
+# Wait for task to appear
+- waitForAnimationToEnd
+- assertVisible: "Test Task"
+

@@ -1,0 +1,15 @@
+appId: ${APP_ID}
+---
+# Test: Create Project Flow
+# Prerequisites: User must be logged in
+- launchApp
+- assertVisible: "My Projects"
+- tapOn: "New Project"
+- assertVisible: "Create New Project"
+- tapOn: "Project Name *"
+- inputText: "Test Project ${RANDOM}"
+- tapOn: "Description"
+- inputText: "This is a test project created by Maestro"
+- tapOn: "Create"
+- assertVisible: "Test Project"
+

@@ -1,0 +1,5 @@
+# Maestro test artifacts
+*.log
+screenshots/
+recordings/
+

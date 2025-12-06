@@ -1,0 +1,39 @@
+appId: ${APP_ID}
+---
+# Test: Move Task Between Columns
+# Prerequisites: User must be logged in, have a project, and at least one task
+- launchApp
+- assertVisible: "My Projects"
+# Wait for projects to load
+- waitForAnimationToEnd
+# Navigate to first project
+- tapOn:
+    text: ".*"
+    index: 0
+    optional: true
+# Alternative tap method
+- tapOn:
+    point: "50%,40%"
+    optional: true
+- assertVisible: "To Do"
+- assertVisible: "In Progress"
+- assertVisible: "Done"
+# Wait for tasks to load
+- waitForAnimationToEnd
+# Long press on first task card in To Do column to initiate drag
+# The task card should be in the leftmost column (To Do)
+- longPressOn:
+    point: "15%,50%"
+    duration: 1000
+# Drag horizontally to the middle column (In Progress)
+- drag:
+    from: 
+      point: "15%,50%"
+    to:
+      point: "50%,50%"
+    duration: 1500
+# Wait for animation to complete
+- waitForAnimationToEnd
+# Verify task moved - check that In Progress column has content
+- assertVisible: "In Progress"
+

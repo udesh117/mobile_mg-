@@ -1,0 +1,19 @@
+# Maestro Configuration
+# Set these values or use environment variables
+
+# App ID - Update based on your platform
+# Android: Check app.json -> android.package
+# iOS: Check app.json -> ios.bundleIdentifier
+# Current app ID from app.json:
+APP_ID: com.projectmanager.mobile
+
+# Test credentials (optional - can be set via environment variables)
+TEST_EMAIL: test@example.com
+TEST_PASSWORD: testpass123
+
+# Device selection (optional)
+# DEVICE: emulator-5554
+
+# Timeout settings (milliseconds)
+# DEFAULT_TIMEOUT: 30000
+

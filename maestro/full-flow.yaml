@@ -1,0 +1,54 @@
+appId: ${APP_ID}
+---
+# Test: Complete User Flow
+# This test covers the full workflow from signup to task management
+- launchApp
+
+# Step 1: Sign Up (if not logged in)
+- runFlow:
+    when:
+      visible: "Welcome Back"
+    commands:
+      - tapOn: "Don't have an account? Sign Up"
+      - assertVisible: "Create Account"
+      - tapOn: "Email"
+      - inputText: "maestro${RANDOM}@test.com"
+      - tapOn: "Password"
+      - inputText: "testpass123"
+      - tapOn: "Confirm Password"
+      - inputText: "testpass123"
+      - tapOn: "Sign Up"
+
+# Step 2: Create Project
+- assertVisible: "My Projects"
+- tapOn: "New Project"
+- assertVisible: "Create New Project"
+- tapOn: "Project Name *"
+- inputText: "Maestro Test Project ${RANDOM}"
+- tapOn: "Create"
+- assertVisible: "Maestro Test Project"
+
+# Step 3: Open Project
+- tapOn: "Maestro Test Project"
+- assertVisible: "New Task"
+
+# Step 4: Create Task
+- tapOn: "New Task"
+- assertVisible: "Create New Task"
+- tapOn: "Task Title *"
+- inputText: "Maestro Test Task ${RANDOM}"
+- tapOn: "Description"
+- inputText: "Created by Maestro automation"
+- tapOn: "Create"
+- assertVisible: "Maestro Test Task"
+
+# Step 5: Verify Task in To Do Column
+- assertVisible: "To Do"
+- assertVisible: "Maestro Test Task"
+
+# Step 6: View Analytics
+- tapOn: "Analytics"
+- assertVisible: "Project Analytics"
+- assertVisible: "Tasks by Status"
+- assertVisible: "1" # Should show 1 task in To Do
+
