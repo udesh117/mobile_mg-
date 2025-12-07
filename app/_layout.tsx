@@ -8,6 +8,7 @@ import { useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
 import { AuthGuard } from '@/utils/authGuard';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import * as ScreenOrientation from 'expo-screen-orientation';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -30,6 +31,9 @@ const queryClient = new QueryClient({
 
 export default function RootLayout() {
   useEffect(() => {
+    // Lock orientation to portrait by default
+    ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
+    
     // Hide splash screen after app is ready
     SplashScreen.hideAsync();
   }, []);

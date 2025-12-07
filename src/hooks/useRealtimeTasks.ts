@@ -62,6 +62,10 @@ export function useRealtimeTasks(projectId: string) {
             queryClient.setQueryData(['tasks', projectId, status], statusTasks);
           });
           
+          // Invalidate analytics to ensure it updates with new task data
+          queryClient.invalidateQueries({ queryKey: ['analytics', projectId] });
+          queryClient.invalidateQueries({ queryKey: ['projectTaskCount', projectId] });
+          
           rafId = null;
         };
 

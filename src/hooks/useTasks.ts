@@ -112,6 +112,9 @@ export function useCreateTask() {
       if (input.assigneeId !== undefined && input.assigneeId !== null) {
         taskData.assigneeId = input.assigneeId;
       }
+      if (input.priority !== undefined && input.priority !== null) {
+        taskData.priority = input.priority;
+      }
       if (input.dueDate !== undefined && input.dueDate !== null) {
         taskData.dueDate = input.dueDate;
       }
@@ -121,6 +124,8 @@ export function useCreateTask() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['tasks', variables.projectId] });
+      queryClient.invalidateQueries({ queryKey: ['analytics', variables.projectId] });
+      queryClient.invalidateQueries({ queryKey: ['projectTaskCount', variables.projectId] });
     },
   });
 }
@@ -140,6 +145,7 @@ export function useUpdateTask() {
       if (data.description !== undefined) updateData.description = data.description;
       if (data.status !== undefined) updateData.status = data.status;
       if (data.assigneeId !== undefined) updateData.assigneeId = data.assigneeId;
+      if (data.priority !== undefined) updateData.priority = data.priority;
       if (data.dueDate !== undefined) updateData.dueDate = data.dueDate;
       if (data.position !== undefined) updateData.position = data.position;
 
@@ -148,6 +154,9 @@ export function useUpdateTask() {
     onSuccess: (_, variables) => {
       // Invalidate all task queries to ensure consistency
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      // Invalidate all analytics queries since we don't have projectId here
+      queryClient.invalidateQueries({ queryKey: ['analytics'] });
+      queryClient.invalidateQueries({ queryKey: ['projectTaskCount'] });
     },
   });
 }
@@ -161,6 +170,8 @@ export function useDeleteTask() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['tasks', variables.projectId] });
+      queryClient.invalidateQueries({ queryKey: ['analytics', variables.projectId] });
+      queryClient.invalidateQueries({ queryKey: ['projectTaskCount', variables.projectId] });
     },
   });
 }
@@ -196,6 +207,8 @@ export function useMoveTask() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['tasks', variables.projectId] });
+      queryClient.invalidateQueries({ queryKey: ['analytics', variables.projectId] });
+      queryClient.invalidateQueries({ queryKey: ['projectTaskCount', variables.projectId] });
     },
   });
 }

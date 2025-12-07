@@ -1,9 +1,10 @@
-import { View, StyleSheet } from 'react-native';
-import { Text, Surface } from 'react-native-paper';
+import { View, StyleSheet, Text } from 'react-native';
 import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
 import { Task, TaskStatus } from '@/types';
 import { TaskCard } from './TaskCard';
 import { CrossColumnDraggableTask } from './CrossColumnDraggableTask';
+import { MaterialIcons } from '@expo/vector-icons';
+import { scaleSize, scaleFont, scalePadding, scaleMargin } from '@/utils/responsive';
 
 interface DraggableTaskColumnProps {
   status: TaskStatus;
@@ -30,7 +31,15 @@ export function DraggableTaskColumn({
   getColumnLayouts,
   scrollX = 0,
 }: DraggableTaskColumnProps) {
-  const renderItem = ({ item, drag, isActive }: RenderItemParams<Task>) => {
+  const renderItem = ({ item, drag, isActive, index }: RenderItemParams<Task>) => {
+    const handleCrossColumnDragEnd = (task: Task, targetStatus?: TaskStatus) => {
+      // If dropped on different column, use cross-column handler
+      if (targetStatus && targetStatus !== status) {
+        onTaskDragEnd?.(task, targetStatus);
+      }
+      // Otherwise, let the within-column drag handle reordering
+    };
+
     return (
       <ScaleDecorator>
         <View
@@ -44,18 +53,13 @@ export function DraggableTaskColumn({
             onPress={() => onTaskPress?.(item)}
             onDragStart={(task) => {
               onTaskDragStart?.(task);
-              // Also trigger the within-column drag for visual feedback
-              drag();
+              // Don't call drag() here - let CrossColumnDraggableTask handle it
+              // Only call drag() if it's a within-column reorder
             }}
-            onDragEnd={(task, targetStatus) => {
-              // If dropped on different column, use cross-column handler
-              if (targetStatus && targetStatus !== status) {
-                onTaskDragEnd?.(task, targetStatus);
-              }
-              // Otherwise, let the within-column drag handle reordering
-            }}
+            onDragEnd={handleCrossColumnDragEnd}
             getColumnLayouts={getColumnLayouts}
             scrollX={scrollX}
+            onWithinColumnDrag={drag}
           />
         </View>
       </ScaleDecorator>
@@ -64,15 +68,6 @@ export function DraggableTaskColumn({
 
   return (
     <View style={styles.container}>
-      <Surface style={[styles.header, { backgroundColor: color }]}>
-        <Text variant="titleMedium" style={styles.title}>
-          {title}
-        </Text>
-        <Text variant="bodySmall" style={styles.count}>
-          {tasks.length}
-        </Text>
-      </Surface>
-
       <View style={styles.tasksContainer}>
         {tasks.length > 0 ? (
           <DraggableFlatList
@@ -80,12 +75,15 @@ export function DraggableTaskColumn({
             onDragEnd={({ data }) => onDragEnd(data, status)}
             keyExtractor={(item) => item.id}
             renderItem={renderItem}
-            scrollEnabled={false}
+            scrollEnabled={true}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
           />
         ) : (
           <View style={styles.emptyState}>
-            <Text variant="bodySmall" style={styles.emptyText}>
-              No tasks
+            <MaterialIcons name="drag-indicator" size={scaleSize(48)} color="#737373" />
+            <Text style={styles.emptyText}>
+              Drag tasks here
             </Text>
           </View>
         )}
@@ -97,41 +95,37 @@ export function DraggableTaskColumn({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginHorizontal: 8,
-    minWidth: 300,
-  },
-  header: {
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  title: {
-    fontWeight: '600',
-    color: 'white',
-  },
-  count: {
-    color: 'white',
-    opacity: 0.9,
   },
   tasksContainer: {
     flex: 1,
   },
+  listContent: {
+    gap: scaleSize(16),
+    paddingBottom: scaleSize(80),
+  },
   dragItem: {
-    marginBottom: 8,
+    marginBottom: 0,
   },
   dragItemActive: {
     opacity: 0.5,
   },
   emptyState: {
-    padding: 24,
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: scaleSize(12),
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: '#404040',
+    minHeight: scaleSize(200),
+    padding: scalePadding(24),
+    marginHorizontal: scaleMargin(4),
   },
   emptyText: {
-    color: '#999',
+    fontSize: scaleFont(14),
+    color: '#737373',
+    textAlign: 'center',
+    marginTop: scaleMargin(8),
   },
 });
 

@@ -1,16 +1,19 @@
-import { View, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
-import { TextInput, Button, Text, Surface } from 'react-native-paper';
+import { View, StyleSheet, KeyboardAvoidingView, Platform, TextInput as RNTextInput, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
+import { Text } from 'react-native-paper';
 import { useState } from 'react';
 import { router } from 'expo-router';
 import { useAuthStore } from '@/store/authStore';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/config/firebase';
+import { scaleSize, scaleFont, scalePadding, scaleMargin, widthPercentage } from '@/utils/responsive';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
   const { setUser } = useAuthStore();
 
   const handleLogin = async () => {
@@ -38,57 +41,84 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={styles.container}
     >
-      <Surface style={styles.surface}>
-        <Text variant="headlineMedium" style={styles.title}>
-          Welcome Back
-        </Text>
-        <Text variant="bodyMedium" style={styles.subtitle}>
-          Sign in to continue
-        </Text>
+      <View style={styles.content}>
+        <View style={styles.header}>
+          <Image 
+            source={require('../../assets/Screenshot 2025-12-06 185319.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={styles.title}>Welcome Back</Text>
+          <Text style={styles.subtitle}>Sign in to continue</Text>
+        </View>
 
-        {error ? (
-          <Text style={styles.error} variant="bodyMedium">
-            {error}
-          </Text>
-        ) : null}
+        <View style={styles.form}>
+          <View style={styles.inputContainer}>
+            <View style={[
+              styles.inputWrapper,
+              emailFocused && styles.inputWrapperFocused
+            ]}>
+              <RNTextInput
+                style={styles.input}
+                placeholder="Enter your email"
+                placeholderTextColor="#737373"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                onFocus={() => setEmailFocused(true)}
+                onBlur={() => setEmailFocused(false)}
+              />
+            </View>
+          </View>
 
-        <TextInput
-          label="Email"
-          value={email}
-          onChangeText={setEmail}
-          mode="outlined"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          style={styles.input}
-        />
+          <View style={styles.inputContainer}>
+            <View style={[
+              styles.inputWrapper,
+              passwordFocused && styles.inputWrapperFocused
+            ]}>
+              <RNTextInput
+                style={styles.input}
+                placeholder="Enter your password"
+                placeholderTextColor="#737373"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                onFocus={() => setPasswordFocused(true)}
+                onBlur={() => setPasswordFocused(false)}
+              />
+            </View>
+          </View>
 
-        <TextInput
-          label="Password"
-          value={password}
-          onChangeText={setPassword}
-          mode="outlined"
-          secureTextEntry
-          style={styles.input}
-        />
+          {error ? (
+            <Text style={styles.error}>{error}</Text>
+          ) : null}
+        </View>
 
-        <Button
-          mode="contained"
-          onPress={handleLogin}
-          loading={loading}
-          disabled={loading}
-          style={styles.button}
-        >
-          Sign In
-        </Button>
+        <View style={styles.footer}>
+          <TouchableOpacity
+            style={[styles.button, loading && styles.buttonDisabled]}
+            onPress={handleLogin}
+            disabled={loading}
+            activeOpacity={0.9}
+          >
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.buttonText}>Sign In</Text>
+            )}
+          </TouchableOpacity>
 
-        <Button
-          mode="text"
-          onPress={() => router.push('/(auth)/signup')}
-          style={styles.linkButton}
-        >
-          Don't have an account? Sign Up
-        </Button>
-      </Surface>
+          <View style={styles.signupContainer}>
+            <Text style={styles.signupText}>
+              Don't have an account?{' '}
+              <Text style={styles.signupLink} onPress={() => router.push('/(auth)/signup')}>
+                Sign Up
+              </Text>
+            </Text>
+          </View>
+        </View>
+      </View>
     </KeyboardAvoidingView>
   );
 }
@@ -96,38 +126,111 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    padding: 20,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#000000',
+    padding: scalePadding(24),
   },
-  surface: {
-    padding: 24,
-    borderRadius: 12,
-    elevation: 4,
+  content: {
+    flex: 1,
+    justifyContent: 'flex-start',
+    width: '100%',
+    paddingTop: scalePadding(30),
+  },
+  header: {
+    marginBottom: scaleMargin(32),
+    alignItems: 'center',
+    width: '100%',
+  },
+  logo: {
+    width: scaleSize(180),
+    maxWidth: '30%',
+    marginBottom: scaleMargin(-70),
+    alignSelf: 'center',
   },
   title: {
-    textAlign: 'center',
-    marginBottom: 8,
+    fontSize: scaleFont(30),
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: -0.5,
+    marginBottom: scaleMargin(4),
   },
   subtitle: {
-    textAlign: 'center',
-    marginBottom: 24,
-    color: '#666',
+    fontSize: scaleFont(16),
+    fontWeight: '400',
+    color: '#A3A3A3',
+  },
+  form: {
+    gap: scaleSize(24),
+    marginBottom: scaleMargin(32),
+  },
+  inputContainer: {
+    gap: scaleSize(8),
+  },
+  inputWrapper: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: scaleSize(12),
+    borderWidth: 1,
+    borderColor: '#262626',
+    backgroundColor: '#171717',
+    minHeight: scaleSize(56),
+    paddingHorizontal: scalePadding(16),
+  },
+  inputWrapperFocused: {
+    borderColor: '#007AFF',
+    borderWidth: 2,
   },
   input: {
-    marginBottom: 16,
-  },
-  button: {
-    marginTop: 8,
-    paddingVertical: 4,
-  },
-  linkButton: {
-    marginTop: 16,
+    flex: 1,
+    height: scaleSize(56),
+    fontSize: scaleFont(16),
+    fontWeight: '400',
+    color: '#FFFFFF',
+    padding: 0,
   },
   error: {
-    color: '#d32f2f',
-    marginBottom: 16,
+    color: '#EF4444',
+    fontSize: scaleFont(14),
     textAlign: 'center',
+    marginTop: scaleMargin(8),
+  },
+  footer: {
+    alignItems: 'center',
+    gap: scaleSize(24),
+  },
+  button: {
+    width: '100%',
+    height: scaleSize(56),
+    backgroundColor: '#007AFF',
+    borderRadius: scaleSize(12),
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#007AFF',
+    shadowOffset: { width: 0, height: scaleSize(4) },
+    shadowOpacity: 0.3,
+    shadowRadius: scaleSize(8),
+    elevation: 8,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
+  },
+  buttonText: {
+    fontSize: scaleFont(16),
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  signupContainer: {
+    alignItems: 'center',
+  },
+  signupText: {
+    fontSize: scaleFont(14),
+    color: '#A3A3A3',
+    textAlign: 'center',
+  },
+  signupLink: {
+    fontSize: scaleFont(14),
+    fontWeight: '700',
+    color: '#007AFF',
   },
 });
 

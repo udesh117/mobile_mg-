@@ -18,10 +18,9 @@ interface CrossColumnDraggableTaskProps {
   currentStatus: TaskStatus;
   getColumnLayouts?: () => Map<TaskStatus, { x: number; width: number }>;
   scrollX?: number;
+  onWithinColumnDrag?: () => void;
 }
 
-const COLUMN_WIDTH = 300;
-const COLUMN_MARGIN = 8;
 
 export function CrossColumnDraggableTask({
   task,
@@ -31,6 +30,7 @@ export function CrossColumnDraggableTask({
   currentStatus,
   getColumnLayouts,
   scrollX = 0,
+  onWithinColumnDrag,
 }: CrossColumnDraggableTaskProps) {
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
@@ -76,13 +76,73 @@ export function CrossColumnDraggableTask({
     }
   };
 
+  const determineTargetColumnAndEndDrag = (absoluteX: number, translationX: number) => {
+    let targetStatus: TaskStatus | undefined;
+    
+    // Only treat as cross-column drag if there's significant horizontal movement
+    const isHorizontalDrag = Math.abs(translationX) > 30;
+    
+    if (!isHorizontalDrag) {
+      // Vertical drag - let DraggableFlatList handle it
+      endDrag(undefined);
+      return;
+    }
+    
+    // Use actual layout measurements if available
+    if (getColumnLayouts) {
+      const layouts = getColumnLayouts();
+      const statuses: TaskStatus[] = ['todo', 'in_progress', 'done'];
+      
+      for (const status of statuses) {
+        const layout = layouts.get(status);
+        if (layout) {
+          const { x, width } = layout;
+          const columnStart = x;
+          const columnEnd = x + width;
+          
+          if (absoluteX >= columnStart && absoluteX <= columnEnd) {
+            targetStatus = status;
+            break;
+          }
+        }
+      }
+    }
+    
+    // Fallback: use screen width calculation if layouts not available
+    if (!targetStatus) {
+      const screenWidth = Dimensions.get('window').width;
+      const padding = 16;
+      const gap = 16;
+      const totalGaps = gap * 2; // gaps between 3 columns
+      const availableWidth = screenWidth - (padding * 2) - totalGaps;
+      const columnWidth = availableWidth / 3;
+      
+      const relativeX = absoluteX - padding;
+      
+      if (relativeX < columnWidth) {
+        targetStatus = 'todo';
+      } else if (relativeX < columnWidth * 2 + gap) {
+        targetStatus = 'in_progress';
+      } else {
+        targetStatus = 'done';
+      }
+    }
+    
+    // Only move if dropped on a different column
+    if (targetStatus && targetStatus !== currentStatus) {
+      endDrag(targetStatus);
+    } else {
+      endDrag(undefined);
+    }
+  };
+
   const longPressGesture = Gesture.LongPress()
-    .minDuration(500)
+    .minDuration(200)
     .onStart(() => {
       try {
         runOnJS(startDrag)();
-        scale.value = withSpring(1.1);
-        opacity.value = withSpring(0.7);
+        scale.value = withSpring(1.05);
+        opacity.value = withSpring(0.8);
       } catch (error) {
         console.error('Error in long press gesture:', error);
       }
@@ -90,10 +150,14 @@ export function CrossColumnDraggableTask({
 
   const panGesture = Gesture.Pan()
     .onStart(() => {
-      if (isDragging.value) {
-        startX.value = translateX.value;
-        startY.value = translateY.value;
+      // Allow pan to start drag if not already dragging
+      if (!isDragging.value) {
+        runOnJS(startDrag)();
+        scale.value = withSpring(1.05);
+        opacity.value = withSpring(0.8);
       }
+      startX.value = translateX.value;
+      startY.value = translateY.value;
     })
     .onUpdate((event) => {
       if (isDragging.value) {
@@ -105,34 +169,9 @@ export function CrossColumnDraggableTask({
       if (!isDragging.value) return;
       
       try {
-        // Use layout measurements if available, otherwise fall back to calculation
-        let targetStatus: TaskStatus | undefined;
-        
-        // Always use fallback calculation for now (more reliable)
-        // Layout measurements can cause issues in worklets
         const finalX = event.absoluteX;
-        const columnWidth = COLUMN_WIDTH + (COLUMN_MARGIN * 2); // 316px
-        const scrollOffset = 16; // Padding
-        const currentScrollX = scrollXValue.value;
-        const relativeX = finalX - scrollOffset + currentScrollX;
-          
-        const columnIndex = Math.floor(relativeX / columnWidth);
-        
-        if (columnIndex === 0) {
-          targetStatus = 'todo';
-        } else if (columnIndex === 1) {
-          targetStatus = 'in_progress';
-        } else if (columnIndex >= 2) {
-          // Done column - use >= 2 to catch edge cases
-          targetStatus = 'done';
-        }
-        
-        // Only move if dropped on a different column
-        if (targetStatus && targetStatus !== currentStatus) {
-          runOnJS(endDrag)(targetStatus);
-        } else {
-          runOnJS(endDrag)(undefined);
-        }
+        const translationX = event.translationX;
+        runOnJS(determineTargetColumnAndEndDrag)(finalX, translationX);
       } catch (error) {
         console.error('Error in pan gesture onEnd:', error);
         runOnJS(endDrag)(undefined);
@@ -166,7 +205,7 @@ export function CrossColumnDraggableTask({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 8,
+    marginBottom: 0,
   },
 });
 

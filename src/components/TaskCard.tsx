@@ -1,7 +1,8 @@
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Card, Text, Chip, Avatar } from 'react-native-paper';
+import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { Task } from '@/types';
-import { formatDate, isOverdue, getDueDateLabel } from '@/utils/dateUtils';
+import { isToday, isTomorrow, differenceInDays, isPast } from 'date-fns';
+import { isOverdue } from '@/utils/dateUtils';
+import { scaleSize, scaleFont, scalePadding, scaleMargin } from '@/utils/responsive';
 
 interface TaskCardProps {
   task: Task;
@@ -9,89 +10,129 @@ interface TaskCardProps {
   onLongPress?: () => void;
 }
 
+type Priority = 'high' | 'medium' | 'low';
+
+function getPriority(task: Task): Priority {
+  if (!task.dueDate) return 'low';
+  
+  const dateObj = typeof task.dueDate === 'string' ? new Date(task.dueDate) : task.dueDate;
+  
+  if (isOverdue(dateObj) || isToday(dateObj) || isTomorrow(dateObj)) {
+    return 'high';
+  }
+  
+  const daysUntil = differenceInDays(dateObj, new Date());
+  if (daysUntil <= 3) {
+    return 'medium';
+  }
+  
+  return 'low';
+}
+
+function getDueDateText(task: Task): string {
+  if (!task.dueDate) return '';
+  
+  const dateObj = typeof task.dueDate === 'string' ? new Date(task.dueDate) : task.dueDate;
+  
+  if (isToday(dateObj)) {
+    return 'Due: Today';
+  }
+  
+  if (isTomorrow(dateObj)) {
+    return 'Due: Tomorrow';
+  }
+  
+  const daysUntil = differenceInDays(dateObj, new Date());
+  if (daysUntil < 0) {
+    const daysAgo = Math.abs(daysUntil);
+    return `Due: ${daysAgo} day${daysAgo > 1 ? 's' : ''} ago`;
+  }
+  
+  return `Due: In ${daysUntil} day${daysUntil > 1 ? 's' : ''}`;
+}
+
 export function TaskCard({ task, onPress, onLongPress }: TaskCardProps) {
-  const isOverdueTask = task.dueDate ? isOverdue(task.dueDate) : false;
+  const priority = getPriority(task);
+  const dueDateText = getDueDateText(task);
+
+  const priorityConfig = {
+    high: { bg: 'rgba(239, 68, 68, 0.5)', dot: '#EF4444', text: '#FCA5A5' },
+    medium: { bg: 'rgba(249, 115, 22, 0.5)', dot: '#F97316', text: '#FDBA74' },
+    low: { bg: 'rgba(234, 179, 8, 0.5)', dot: '#EAB308', text: '#FDE047' },
+  };
+
+  const config = priorityConfig[priority];
 
   return (
     <TouchableOpacity onPress={onPress} onLongPress={onLongPress} activeOpacity={0.7}>
-      <Card style={[styles.card, isOverdueTask && styles.overdueCard]}>
-        <Card.Content>
-          <Text variant="titleMedium" style={styles.title}>
-            {task.title}
-          </Text>
+      <View style={styles.card}>
+        <View style={styles.content}>
+          <Text style={styles.title}>{task.title}</Text>
           
-          {task.description ? (
-            <Text variant="bodySmall" style={styles.description} numberOfLines={2}>
-              {task.description}
-            </Text>
-          ) : null}
-
           <View style={styles.footer}>
-            {task.assigneeId ? (
-              <View style={styles.assignee}>
-                <Avatar.Text size={24} label={task.assigneeId.charAt(0).toUpperCase()} />
-                <Text variant="bodySmall" style={styles.assigneeText}>
-                  Assigned
-                </Text>
-              </View>
+            {dueDateText ? (
+              <Text style={styles.dueDate}>{dueDateText}</Text>
             ) : null}
-
-            {task.dueDate ? (
-              <Chip
-                icon="calendar"
-                style={[styles.chip, isOverdueTask && styles.overdueChip]}
-                textStyle={isOverdueTask ? styles.overdueText : undefined}
-              >
-                {getDueDateLabel(task.dueDate)}
-              </Chip>
-            ) : null}
+            
+            <View style={[styles.priorityBadge, { backgroundColor: config.bg }]}>
+              <View style={[styles.priorityDot, { backgroundColor: config.dot }]} />
+              <Text style={[styles.priorityText, { color: config.text }]}>
+                {priority.charAt(0).toUpperCase() + priority.slice(1)}
+              </Text>
+            </View>
           </View>
-        </Card.Content>
-      </Card>
+        </View>
+      </View>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: 8,
-    elevation: 2,
+    borderRadius: scaleSize(12),
+    backgroundColor: '#1C1C1E',
+    overflow: 'hidden',
   },
-  overdueCard: {
-    borderLeftWidth: 4,
-    borderLeftColor: '#d32f2f',
+  content: {
+    padding: scalePadding(12),
+    gap: scaleSize(8),
   },
   title: {
-    marginBottom: 8,
-    fontWeight: '600',
-  },
-  description: {
-    color: '#666',
-    marginBottom: 12,
+    fontSize: scaleFont(16),
+    fontWeight: '500',
+    color: '#FFFFFF',
+    letterSpacing: -0.015,
+    lineHeight: scaleSize(20),
   },
   footer: {
+    marginTop: scaleMargin(8),
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 8,
+    alignItems: 'flex-end',
+    gap: scaleSize(12),
   },
-  assignee: {
+  dueDate: {
+    fontSize: scaleFont(14),
+    fontWeight: '400',
+    color: '#A0A0A0',
+    lineHeight: scaleSize(20),
+  },
+  priorityBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: scaleSize(4),
+    paddingHorizontal: scalePadding(8),
+    paddingVertical: scalePadding(4),
+    borderRadius: scaleSize(9999),
   },
-  assigneeText: {
-    color: '#666',
+  priorityDot: {
+    width: scaleSize(8),
+    height: scaleSize(8),
+    borderRadius: scaleSize(4),
   },
-  chip: {
-    height: 28,
-  },
-  overdueChip: {
-    backgroundColor: '#ffebee',
-  },
-  overdueText: {
-    color: '#d32f2f',
+  priorityText: {
+    fontSize: scaleFont(12),
+    fontWeight: '500',
   },
 });
 
